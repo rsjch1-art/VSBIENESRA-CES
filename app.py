@@ -28,7 +28,6 @@ def init_db():
 
 init_db()
 
-# --- Rutas principales ---
 @app.route("/")
 def home():
     conn = get_connection()
@@ -82,12 +81,10 @@ def eliminar(prop_id):
     conn.close()
     return redirect(url_for("home"))
 
-# --- Endpoint de salud ---
 @app.route("/health")
 def health():
     return jsonify({"status": "ok"}), 200
 
-# --- Inicialización ---
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
