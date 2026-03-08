@@ -1,10 +1,6 @@
-import os
-import psycopg2
-import urllib.parse as up
+import os, psycopg2, urllib.parse as up
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
-
-# Asegúrate que empiece con postgres://
 if DATABASE_URL.startswith("postgresql://"):
     DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgres://", 1)
 
@@ -18,4 +14,3 @@ conn = psycopg2.connect(
     host=url.hostname,
     port=url.port
 )
-cur = conn.cursor()
