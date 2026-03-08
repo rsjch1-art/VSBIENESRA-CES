@@ -1,126 +1,93 @@
-from flask import Flask, request, jsonify, send_from_directory
-import sqlite3
+from flask import Flask, render_template, request, redirect, url_for, jsonify
+import psycopg2
 import os
-from dotenv import load_dotenv
 
-load_dotenv()
+app = Flask(__name__)
 
-app = Flask(__name__, static_folder="../frontend")
-app.secret_key = os.getenv("SECRET_KEY", "miriam_real_estate_2026")
+# --- Configuración de PostgreSQL ---
+DB_URL = os.environ.get("DATABASE_URL")
 
-def db():
-    return sqlite3.connect("inmobiliaria.db")
+def get_connection():
+    return psycopg2.connect(DB_URL)
 
-# Inicializar BD
 def init_db():
-    conn = db()
-    cur = conn.cursor()
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS admins (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        usuario TEXT UNIQUE NOT NULL,
-        contraseña TEXT NOT NULL
-    )
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS propiedades (
+            id SERIAL PRIMARY KEY,
+            titulo TEXT NOT NULL,
+            descripcion TEXT,
+            precio NUMERIC,
+            ubicacion TEXT
+        )
     """)
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS propiedades (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        titulo TEXT NOT NULL,
-        descripcion TEXT,
-        precio REAL,
-        ubicacion TEXT,
-        imagen_url TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-    """)
-    # Crear admin por defecto
-    cur.execute("INSERT OR IGNORE INTO admins (usuario, contraseña) VALUES (?, ?)", ("miriam", "Miriam*1"))
     conn.commit()
+    cursor.close()
     conn.close()
 
 init_db()
 
+# --- Rutas principales ---
 @app.route("/")
-def index():
-    return send_from_directory("../frontend","index.html")
+def home():
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM propiedades")
+    propiedades = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return render_template("index.html", propiedades=propiedades)
 
-@app.route("/admin.html")
-def admin():
-    return send_from_directory("../frontend","admin.html")
+@app.route("/propiedad/<int:prop_id>")
+def propiedad(prop_id):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM propiedades WHERE id=%s", (prop_id,))
+    propiedad = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    if propiedad:
+        return render_template("propiedad.html", propiedad=propiedad)
+    else:
+        return "Propiedad no encontrada", 404
 
-@app.route("/<path:path>")
-def static_files(path):
-    return send_from_directory("../frontend",path)
-
-@app.route("/api/login", methods=["POST"])
-def login():
-    try:
-        data=request.json
-        conn=db()
-        cur=conn.cursor()
-        cur.execute("SELECT * FROM admins WHERE usuario=? AND contraseña=?",(data["usuario"], data["contraseña"]))
-        result=cur.fetchone()
-        cur.close()
-        conn.close()
-        return jsonify({"success": result is not None, "error": None if result else "Credenciales inválidas"})
-    except Exception as e:
-        return jsonify({"success":False, "error":str(e)}), 500
-
-@app.route("/api/propiedades")
-def propiedades():
-    try:
-        conn=db()
-        conn.row_factory = sqlite3.Row
-        cur=conn.cursor()
-        cur.execute("SELECT * FROM propiedades")
-        data=cur.fetchall()
-        cur.close()
-        conn.close()
-        return jsonify([dict(row) for row in data])
-    except Exception as e:
-        return jsonify([]), 500
-
-@app.route("/api/agregar_propiedad", methods=["POST"])
+@app.route("/agregar", methods=["GET", "POST"])
 def agregar():
-    try:
-        data=request.json
-        conn=db()
-        cur=conn.cursor()
-        cur.execute("""INSERT INTO propiedades (titulo,descripcion,precio,ubicacion,imagen_url) 
-                      VALUES (?,?,?,?,?)""",(data["titulo"],data["descripcion"],data["precio"],data["ubicacion"],data.get("imagen_url","")))
+    if request.method == "POST":
+        titulo = request.form["titulo"]
+        descripcion = request.form["descripcion"]
+        precio = request.form["precio"]
+        ubicacion = request.form["ubicacion"]
+
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT INTO propiedades (titulo, descripcion, precio, ubicacion) VALUES (%s, %s, %s, %s)",
+            (titulo, descripcion, precio, ubicacion)
+        )
         conn.commit()
-        cur.close()
+        cursor.close()
         conn.close()
-        return jsonify({"success":True})
-    except Exception as e:
-        return jsonify({"success":False, "error":str(e)}), 500
+        return redirect(url_for("home"))
+    return render_template("agregar.html")
 
-@app.route("/api/eliminar_propiedad", methods=["POST"])
-def eliminar():
-    try:
-        data=request.json
-        conn=db()
-        cur=conn.cursor()
-        cur.execute("DELETE FROM propiedades WHERE id=?",(data["id"],))
-        conn.commit()
-        cur.close()
-        conn.close()
-        return jsonify({"success":True})
-    except Exception as e:
-        return jsonify({"success":False, "error":str(e)}), 500
+@app.route("/eliminar/<int:prop_id>", methods=["POST"])
+def eliminar(prop_id):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM propiedades WHERE id=%s", (prop_id,))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return redirect(url_for("home"))
 
-@app.route("/api/logout", methods=["POST"])
-def logout():
-    return jsonify({"success":True})
+# --- Endpoint de salud ---
+@app.route("/health")
+def health():
+    return jsonify({"status": "ok"}), 200
 
-@app.route("/api/contact", methods=["POST"])
-def contact():
-    try:
-        data=request.json
-        return jsonify({"success":True, "message":"Mensaje recibido"})
-    except:
-        return jsonify({"success":False}), 500
-
-if __name__=="__main__":
-    port = int(os.getenv("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=os.getenv("FLASK_ENV") == "development")
+# --- Inicialización ---
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
