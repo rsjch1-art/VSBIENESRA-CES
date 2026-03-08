@@ -1,0 +1,29 @@
+:root{--gold:#c9a227;--light-gold:rgba(201,162,39,.1)}
+*{scroll-behavior:smooth}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background-color:#f8f9fa}
+.navbar{background:linear-gradient(to right,#000,#1a1a1a)!important;padding:0.75rem 0;box-shadow:0 2px 4px rgba(0,0,0,.1)}
+.navbar .form-control{background:#222;border:1px solid #444;color:#fff;font-size:.875rem}
+.navbar .form-control:focus{border-color:var(--gold);background:#1a1a1a;color:#fff;box-shadow:0 0 0 0.25rem rgb(201 162 39 / 10%)}
+.navbar .btn-outline-light:hover{background:var(--gold);color:#000;border-color:var(--gold)}
+#grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.75rem}
+.card{border:0;transition:all .3s ease;box-shadow:0 2px 8px rgba(0,0,0,.07);border-radius:10px;overflow:hidden}
+.card:hover{transform:translateY(-6px);box-shadow:0 12px 24px rgba(0,0,0,.1)}
+.card img{height:220px;object-fit:cover}
+.card-body{padding:1.25rem}
+.card-title{font-weight:600;margin-bottom:.5rem;font-size:1.1rem}
+.card-text{color:#666}
+.badge{font-size:.85rem}
+.btn-success{background:#25d366;border:0}
+.btn-success:hover{background:#1da851}
+.modal-content{border-radius:12px;border:0;box-shadow:0 10px 40px rgba(0,0,0,.15)}
+.btn-primary{background:var(--gold);border:0;color:#000;font-weight:600}
+.btn-primary:hover{background:#9a7d1d;color:#000}
+footer{background:#000;color:#fff}
+footer a{color:var(--gold);text-decoration:none}
+footer a:hover{color:#d4af37}
+
+@media(max-width:576px){
+	#grid{grid-template-columns:1fr}
+	.navbar .d-flex{flex-wrap:wrap;gap:.5rem!important}
+	.navbar .form-control{width:100%;order:3}
+}

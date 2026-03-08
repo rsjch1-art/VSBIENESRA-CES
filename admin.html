@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Panel Admin - Miriam Vazquez</title>
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+	<style>
+		*{margin:0;padding:0;box-sizing:border-box}
+		body{background:#0a0e27;color:#e0e0e0;font-family:'Segoe UI',sans-serif;min-height:100vh}
+		:root{--gold:#c9a227;--dark-bg:#0a0e27;--card-bg:#1a1f3a;--border-color:#2d3548}
+		.navbar{background:linear-gradient(135deg, rgba(10,14,39,.95), rgba(26,31,58,.95));border-bottom:1px solid var(--gold);padding:1rem 2rem}
+		.navbar h2{color:var(--gold);font-weight:700;letter-spacing:1px;margin:0}
+		.navbar-text{color:#b0b0b0;font-size:.9rem}
+		.btn-logout{background:linear-gradient(135deg, var(--gold), #d4af37);color:#000;border:0;font-weight:600;padding:.5rem 1.5rem;border-radius:4px;transition:all .3s}
+		.btn-logout:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(201,162,39,.3);color:#000}
+		.container-main{max-width:1200px;margin:2rem auto;padding:0 1rem}
+		.section{background:linear-gradient(135deg, rgba(26,31,58,.8), rgba(20,25,50,.8));border:1px solid var(--border-color);border-radius:12px;padding:2rem;margin-bottom:2rem;backdrop-filter:blur(10px)}
+		.section h3{color:var(--gold);font-weight:700;margin-bottom:1.5rem;display:flex;align-items:center;gap:.5rem}
+		.section h3:before{content:'';width:4px;height:24px;background:linear-gradient(180deg, var(--gold), #8b7b1f);border-radius:2px}
+		.form-label{color:#b0b0b0;font-weight:600;margin-bottom:.5rem}
+		.form-control{background:#0f1425;border:1px solid var(--border-color);color:#e0e0e0;padding:.75rem;border-radius:6px;transition:all .3s}
+		.form-control:focus{background:#0f1425;border-color:var(--gold);color:#e0e0e0;box-shadow:0 0 0 3px rgba(201,162,39,.1)}
+		.btn-submit{background:linear-gradient(135deg, var(--gold), #d4af37);color:#000;border:0;font-weight:600;padding:.75rem 2rem;border-radius:6px;transition:all .3s;width:100%;margin-top:1rem}
+		.btn-submit:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(201,162,39,.4);color:#000}
+		.alert{border-radius:6px;border:1px solid transparent;animation:slideIn .3s ease-out}
+		.alert-success{background:rgba(76,175,80,.15);border-color:rgba(76,175,80,.3);color:#81c784}
+		.alert-danger{background:rgba(244,67,54,.15);border-color:rgba(244,67,54,.3);color:#ef5350}
+		.card{background:linear-gradient(135deg, rgba(26,31,58,.6), rgba(20,25,50,.6));border:1px solid var(--border-color);color:#e0e0e0;transition:all .3s}
+		.card:hover{transform:translateY(-4px);border-color:var(--gold);box-shadow:0 12px 30px rgba(201,162,39,.2)}
+		.badge{background:var(--gold)!important;color:#000!important;font-weight:600}
+		.btn-danger{background:#c33;border:0;transition:all .3s}
+		.btn-danger:hover{background:#e44;transform:translateY(-2px);box-shadow:0 6px 15px rgba(204,51,51,.3)}
+		.stats-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:1.5rem;margin-bottom:2rem}
+		.stat-box{background:linear-gradient(135deg, rgba(201,162,39,.1), rgba(201,162,39,.05));border:1px solid rgba(201,162,39,.2);border-radius:8px;padding:1.5rem;text-align:center}
+		.stat-box h4{color:var(--gold);font-weight:700;margin-bottom:.5rem}
+		.stat-box p{color:#b0b0b0;margin:0}
+		@media(max-width:768px){.container-main{margin:1rem auto}.section{padding:1.5rem}.stats-grid{grid-template-columns:1fr}}
+		@keyframes slideIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+	</style>
+</head>
+<body>
+	<nav class="navbar">
+		<div class="d-flex justify-content-between align-items-center" style="width:100%">
+			<div>
+				<h2>Miriam Vazquez</h2>
+				<small class="navbar-text">Panel Administrativo</small>
+			</div>
+			<div>
+				<span class="navbar-text" style="margin-right:1rem">Admin: <strong id="adminUser">—</strong></span>
+				<button id="logoutBtn" class="btn-logout">Cerrar Sesión</button>
+			</div>
+		</div>
+	</nav>
+
+	<div id="loginSection" class="d-flex align-items-center justify-content-center" style="min-height:100vh;display:none">
+		<div class="section" style="width:100%;max-width:400px;margin:0">
+			<h3>Acceso Administrador</h3>
+			<div id="loginMsg" style="display:none;margin-bottom:1rem"></div>
+			<form id="loginForm">
+				<div class="mb-3">
+					<label class="form-label">Usuario</label>
+					<input type="text" class="form-control" id="loginUser" placeholder="miriam" required>
+				</div>
+				<div class="mb-3">
+					<label class="form-label">Contraseña</label>
+					<input type="password" class="form-control" id="loginPass" placeholder="Miriam*1" required>
+				</div>
+				<button type="submit" class="btn-submit">Ingresar</button>
+			</form>
+		</div>
+	</div>
+
+	<div id="adminWrapper" style="display:none">
+		<div class="container-main">
+			<div class="stats-grid">
+				<div class="stat-box">
+					<h4 id="totalProps">0</h4>
+					<p>Propiedades</p>
+				</div>
+				<div class="stat-box">
+					<h4>Miriam Vazquez</h4>
+					<p>Corredor</p>
+				</div>
+				<div class="stat-box">
+					<h4>Real Estate</h4>
+					<p>Gestión</p>
+				</div>
+			</div>
+
+			<div class="section">
+				<h3>Agregar Propiedad</h3>
+				<div id="propFeedback" style="display:none;margin-bottom:1rem"></div>
+				<form id="propForm">
+					<div class="row">
+						<div class="col-md-6 mb-3">
+							<label class="form-label">Título</label>
+							<input type="text" class="form-control" id="propTitle" placeholder="Casa de lujo en Zona 10" required>
+						</div>
+						<div class="col-md-6 mb-3">
+							<label class="form-label">Precio</label>
+							<input type="number" class="form-control" id="propPrice" placeholder="250000" required>
+						</div>
+					</div>
+					<div class="mb-3">
+						<label class="form-label">Ubicación</label>
+						<input type="text" class="form-control" id="propLoc" placeholder="Zona 10, Ciudad de Guatemala" required>
+					</div>
+					<div class="mb-3">
+						<label class="form-label">Descripción</label>
+						<textarea class="form-control" id="propDesc" placeholder="Detalles de la propiedad..." rows="4"></textarea>
+					</div>
+					<div class="mb-3">
+						<label class="form-label">URL de Imagen</label>
+						<input type="url" class="form-control" id="propImg" placeholder="https://ejemplo.com/imagen.jpg">
+					</div>
+					<button type="submit" class="btn-submit">Agregar Propiedad</button>
+				</form>
+			</div>
+
+			<div class="section">
+				<h3>Propiedades Registradas</h3>
+				<div class="row" id="propsList">
+					<p class="text-muted">Cargando...</p>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script src="admin.js"></script>
+</body>
+</html>
