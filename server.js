@@ -15,9 +15,9 @@ const pool = mysql.createPool({
   port: process.env.MYSQLPORT
 });
 
-// ✅ Healthcheck
+// ✅ Healthcheck: responde siempre 200
 app.get("/", (req, res) => {
-  res.send("Servicio activo ✅");
+  res.status(200).send("Servicio activo ✅");
 });
 
 // 📋 Obtener propiedades
@@ -26,6 +26,7 @@ app.get("/api/propiedades", async (req, res) => {
     const [rows] = await pool.query("SELECT * FROM propiedades");
     res.json(rows);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Error al obtener propiedades" });
   }
 });
@@ -40,10 +41,11 @@ app.post("/api/agregar_propiedad", async (req, res) => {
     );
     res.json({ success: true });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Error al guardar propiedad" });
   }
 });
 
-// 🚪 Puerto dinámico
+// 🚪 Puerto dinámico de Railway
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));
